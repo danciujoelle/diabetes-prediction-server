@@ -23,6 +23,7 @@ from sklearn.ensemble import RandomForestClassifier
 from keras.utils import np_utils
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Dropout, Activation, Conv2D,MaxPooling2D, Flatten
+from imblearn.combine import SMOTETomek ##For upsampling
 
 import pickle #for serialization
 from sklearn.tree import DecisionTreeClassifier
@@ -35,12 +36,15 @@ dataset=pd.read_csv("Diabetes.csv")
 title_mapping = {'YES':1,'NO':0}
 dataset[' Class variable']=dataset[' Class variable'].map(title_mapping)
 
-"""Zeros Count in Data"""
+"""# **Checking how many result we have of each outcome**
 
-zeros=(dataset == 0).sum(axis=0)
+Zeros Count in Data
+"""
+
+zeros=(X == 0).sum(axis=0)
 zeros=pd.DataFrame(zeros)
 zeros.columns=['Zeros Count']
-zeros.drop(' Class variable',inplace=True)
+# zeros.drop(' Class variable',inplace=True)
 zeros.plot(kind='bar',stacked=True, figsize=(10,5),grid=True)
 
 col=['n_pregnant','glucose_conc','bp','skin_len','insulin','bmi','pedigree_fun','age','Output']
@@ -58,8 +62,8 @@ diabetes_false_count = len(dataset.loc[dataset['Output'] == False])
 
 col=['glucose_conc','bp','insulin','bmi','skin_len']
 for i in col:
-    dataset[i].replace(0, np.nan, inplace= True)
-dataset.isnull().sum()
+    X[i].replace(0, np.nan, inplace= True)
+X.isnull().sum()
 
 def median_target(var):   
     temp = dataset[dataset[var].notnull()]
@@ -164,13 +168,11 @@ dataset.loc[(dataset['Output'] == 1 ) & (dataset['age']>61), 'age'] = 36
 X = dataset.drop(['Output'], 1)
 y = dataset['Output']
 
-x_train,x_test,y_train,y_test=train_test_split(X,y,test_size=0.2,random_state=0)
+x_train,x_test,y_train,y_test=train_test_split(X,y,test_size=0.25,random_state=0)
 
-"""# **Scaling the data**"""
+print(x_train)
 
-std = StandardScaler()
-x_train = std.fit_transform(x_train)
-x_test = std.transform(x_test)
+print(y_train)
 
 """# **Support Vector Machine with Radial Basis Function Kernel**"""
 
@@ -188,6 +190,7 @@ print(classification_report(y_test,y_pred))
 """# **Random Forest Classifier**"""
 
 classifier=RandomForestClassifier()
+x_train = x_train.values
 classifier.fit(x_train,y_train)
 
 Y_pred=classifier.predict(x_test)
