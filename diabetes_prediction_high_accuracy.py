@@ -24,7 +24,6 @@ from keras.utils import np_utils
 from keras.models import Sequential, load_model
 from keras.layers import Dense, Dropout, Activation, Conv2D,MaxPooling2D, Flatten
 from imblearn.combine import SMOTETomek ##For upsampling
-
 import pickle #for serialization
 from sklearn.tree import DecisionTreeClassifier
 from sklearn import metrics
@@ -36,12 +35,9 @@ dataset=pd.read_csv("Diabetes.csv")
 title_mapping = {'YES':1,'NO':0}
 dataset[' Class variable']=dataset[' Class variable'].map(title_mapping)
 
-"""# **Checking how many result we have of each outcome**
+"""Zeros Count in Data"""
 
-Zeros Count in Data
-"""
-
-zeros=(X == 0).sum(axis=0)
+zeros=(dataset == 0).sum(axis=0)
 zeros=pd.DataFrame(zeros)
 zeros.columns=['Zeros Count']
 # zeros.drop(' Class variable',inplace=True)
@@ -62,8 +58,8 @@ diabetes_false_count = len(dataset.loc[dataset['Output'] == False])
 
 col=['glucose_conc','bp','insulin','bmi','skin_len']
 for i in col:
-    X[i].replace(0, np.nan, inplace= True)
-X.isnull().sum()
+    dataset[i].replace(0, np.nan, inplace= True)
+dataset.isnull().sum()
 
 def median_target(var):   
     temp = dataset[dataset[var].notnull()]
@@ -122,6 +118,8 @@ dataset.loc[(dataset['Output'] == 1 ) & (dataset['n_pregnant']>13), 'n_pregnant'
 
 dataset['n_pregnant'].value_counts()
 
+sns.boxplot(dataset.n_pregnant)
+
 sns.boxplot(dataset.bp)
 
 median_target('bp')
@@ -142,12 +140,16 @@ dataset.loc[(dataset['Output'] == 1 ) & (dataset['skin_len']>38), 'skin_len'] = 
 dataset.loc[(dataset['Output'] == 0 ) & (dataset['skin_len']<20), 'skin_len'] = 27
 dataset.loc[(dataset['Output'] == 1 ) & (dataset['skin_len']<20), 'skin_len'] = 32
 
+sns.boxplot(dataset.skin_len)
+
 sns.boxplot(dataset.bmi)
 
 median_target('bmi')
 
 dataset.loc[(dataset['Output'] == 0 ) & (dataset['bmi']>48), 'bmi'] = 30.1
 dataset.loc[(dataset['Output'] == 1 ) & (dataset['bmi']>48), 'bmi'] = 34.3
+
+sns.boxplot(dataset.bmi)
 
 sns.boxplot(dataset.pedigree_fun)
 
@@ -156,12 +158,16 @@ median_target('pedigree_fun')
 dataset.loc[(dataset['Output'] == 0 ) & (dataset['pedigree_fun']>1), 'pedigree_fun'] = 0.336
 dataset.loc[(dataset['Output'] == 1 ) & (dataset['pedigree_fun']>1), 'pedigree_fun'] = 0.449
 
+sns.boxplot(dataset.pedigree_fun)
+
 sns.boxplot(dataset.age)
 
 median_target('age')
 
 dataset.loc[(dataset['Output'] == 0 ) & (dataset['age']>61), 'age'] = 27
 dataset.loc[(dataset['Output'] == 1 ) & (dataset['age']>61), 'age'] = 36
+
+sns.boxplot(dataset.age)
 
 """# **Step 4 : Splitting the data**"""
 
@@ -172,20 +178,9 @@ x_train,x_test,y_train,y_test=train_test_split(X,y,test_size=0.25,random_state=0
 
 print(x_train)
 
+print(x_test)
+
 print(y_train)
-
-"""# **Support Vector Machine with Radial Basis Function Kernel**"""
-
-model=SVC(kernel='rbf')
-model.fit(x_train,y_train)
-
-y_pred=model.predict(x_test)
-
-accuracy_score(y_test,y_pred)
-
-confusion_matrix(y_test,y_pred)
-
-print(classification_report(y_test,y_pred))
 
 """# **Random Forest Classifier**"""
 
